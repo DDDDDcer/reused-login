@@ -72,5 +72,5 @@ third-party:
     wechat:
       app-id: demo-wechat-app-id
     feishu:
-      app-id: cli_aacc2ed222785bdb
+      app-id: ${FEISHU_APP_ID:cli_aacc2ed222785bdb}
       app-secret: ${FEISHU_APP_SECRET:}
