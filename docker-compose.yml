@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  final-topbiz:
+    build: ./topbiz-service
+    container_name: final-topbiz
+    network_mode: host
+    restart: unless-stopped
+    depends_on:
+      - final-user
+      - final-msg
+      - final-log
+
+  final-user:
+    build: ./user-service
+    container_name: final-user
+    network_mode: host
+    restart: unless-stopped
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://localhost:13306/zx?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&createDatabaseIfNotExist=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=Duanduan123
+      - SPRING_DATA_REDIS_HOST=localhost
+      - SPRING_DATA_REDIS_PORT=16379
+
+  final-msg:
+    build: ./msg-service
+    container_name: final-msg
+    network_mode: host
+    restart: unless-stopped
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://localhost:13306/zx?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&createDatabaseIfNotExist=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=Duanduan123
+
+  final-log:
+    build: ./log-service
+    container_name: final-log
+    network_mode: host
+    restart: unless-stopped

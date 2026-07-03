@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>第三方授权核验</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #06152d;
+      --muted: #4c6385;
+      --line: #cfe0f1;
+      --brand: #007a73;
+      --brand-soft: #e9fbf7;
+      --bg: #f5f8fc;
+      font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background: var(--bg);
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    main {
+      width: min(460px, 100%);
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: 0 18px 50px rgba(9, 36, 77, .12);
+      overflow: hidden;
+    }
+
+    header {
+      padding: 26px 28px 18px;
+      border-bottom: 1px solid var(--line);
+      background: var(--brand-soft);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 32px;
+      padding: 0 14px;
+      border: 1px solid rgba(0, 122, 115, .35);
+      border-radius: 999px;
+      color: var(--brand);
+      font-weight: 800;
+      background: #fff;
+    }
+
+    h1 {
+      margin: 18px 0 8px;
+      font-size: 28px;
+      line-height: 1.2;
+      letter-spacing: 0;
+    }
+
+    p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    section {
+      padding: 22px 28px 28px;
+    }
+
+    .scope {
+      display: grid;
+      gap: 10px;
+      margin: 0 0 20px;
+      padding: 0;
+      list-style: none;
+    }
+
+    .scope li {
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: var(--muted);
+      background: #f9fbfe;
+    }
+
+    label {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 14px;
+      font-size: 14px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    input {
+      width: 100%;
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 0 12px;
+      color: var(--ink);
+      font: inherit;
+      outline: none;
+      background: #fff;
+    }
+
+    input:focus {
+      border-color: var(--brand);
+      box-shadow: 0 0 0 3px rgba(0, 122, 115, .12);
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    button {
+      min-height: 46px;
+      border: 1px solid var(--brand);
+      border-radius: 8px;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+      background: var(--brand-soft);
+      color: var(--brand);
+    }
+
+    button.primary {
+      background: var(--brand);
+      color: #fff;
+    }
+
+    .state {
+      margin-top: 14px;
+      font-size: 13px;
+      color: var(--muted);
+      word-break: break-all;
+    }
+
+    .done {
+      display: none;
+      margin-top: 14px;
+      padding: 12px;
+      border-radius: 8px;
+      background: #eef9f0;
+      color: #207345;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <span class="badge" id="providerBadge">第三方平台</span>
+      <h1 id="title">权限核验</h1>
+      <p>这是用户管理服务提供的第三方唯一凭证登录演示页，用来模拟 QQ、微信、飞书的授权确认流程。</p>
+    </header>
+
+    <section>
+      <ul class="scope" id="scopeList"></ul>
+
+      <label>
+        平台唯一凭证 OpenID / UnionID
+        <input id="openIdInput" autocomplete="off">
+      </label>
+
+      <label>
+        昵称
+        <input id="nicknameInput" autocomplete="off">
+      </label>
+
+      <div class="actions">
+        <button type="button" id="cancelBtn">取消</button>
+        <button type="button" class="primary" id="confirmBtn">同意授权</button>
+      </div>
+
+      <div class="state" id="stateText"></div>
+      <div class="done" id="doneText">授权完成，正在返回演示页面。</div>
+    </section>
+  </main>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const provider = (params.get("provider") || "QQ").toUpperCase();
+    const providerMap = {
+      QQ: {
+        name: "QQ",
+        openIdPrefix: "qq-openid",
+        scopes: ["核验 QQ 登录身份", "返回 QQ OpenID", "返回昵称用于自动注册"]
+      },
+      WECHAT: {
+        name: "微信",
+        openIdPrefix: "wechat-unionid",
+        scopes: ["核验微信扫码身份", "返回微信 UnionID / OpenID", "返回昵称用于自动注册"]
+      },
+      FEISHU: {
+        name: "飞书",
+        openIdPrefix: "feishu-openid",
+        scopes: ["核验飞书用户身份", "返回飞书 OpenID", "返回租户内昵称"]
+      }
+    };
+    const profile = providerMap[provider] || providerMap.QQ;
+    const state = params.get("state") || "";
+    const defaultOpenId = params.get("open_id") || `${profile.openIdPrefix}-${Date.now().toString().slice(-6)}`;
+
+    document.getElementById("providerBadge").textContent = profile.name;
+    document.getElementById("title").textContent = `${profile.name} 权限核验`;
+    document.getElementById("openIdInput").value = defaultOpenId;
+    document.getElementById("nicknameInput").value = params.get("nickname") || `${profile.name}演示用户`;
+    document.getElementById("stateText").textContent = state ? `state: ${state}` : "本次演示未携带 state";
+    document.getElementById("scopeList").innerHTML = profile.scopes.map(item => `<li>${item}</li>`).join("");
+
+    document.getElementById("cancelBtn").addEventListener("click", () => window.close());
+    document.getElementById("confirmBtn").addEventListener("click", () => {
+      const message = {
+        type: "third-party-authorized",
+        provider,
+        open_id: document.getElementById("openIdInput").value.trim() || defaultOpenId,
+        nickname: document.getElementById("nicknameInput").value.trim(),
+        state
+      };
+      if (window.opener && !window.opener.closed) {
+        window.opener.postMessage(message, window.location.origin);
+      }
+      document.getElementById("doneText").style.display = "block";
+      setTimeout(() => window.close(), 900);
+    });
+  </script>
+</body>
+</html>

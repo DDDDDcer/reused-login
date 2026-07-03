@@ -1,0 +1,19 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: topbiz-service
+
+topbiz:
+  clients:
+    legacy-user-url: http://localhost:8080
+    validate-url: http://localhost:8081
+    user-service-url: http://localhost:18081
+    msg-service-url: http://localhost:18082
+    log-service-url: http://localhost:18083
+
+logging:
+  level:
+    root: INFO
+    cc.synx: DEBUG

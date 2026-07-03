@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>第三方授权回调</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #06152d;
+      --muted: #4c6385;
+      --line: #cfe0f1;
+      --brand: #007a73;
+      --brand-soft: #e9fbf7;
+      --bg: #f5f8fc;
+      font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      color: var(--ink);
+      background: var(--bg);
+    }
+
+    main {
+      width: min(560px, 100%);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 18px 50px rgba(9, 36, 77, .12);
+      padding: 28px;
+    }
+
+    span {
+      display: inline-flex;
+      min-height: 32px;
+      align-items: center;
+      padding: 0 14px;
+      border: 1px solid rgba(0, 122, 115, .35);
+      border-radius: 999px;
+      color: var(--brand);
+      background: var(--brand-soft);
+      font-weight: 800;
+    }
+
+    h1 {
+      margin: 18px 0 10px;
+      font-size: 28px;
+      line-height: 1.2;
+      letter-spacing: 0;
+    }
+
+    p {
+      margin: 0 0 18px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    pre {
+      margin: 0;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: #d8f3ff;
+      background: #0d182f;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    button {
+      width: 100%;
+      min-height: 46px;
+      margin-top: 18px;
+      border: 1px solid var(--brand);
+      border-radius: 8px;
+      color: var(--brand);
+      background: var(--brand-soft);
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <span id="providerText">第三方平台</span>
+    <h1 id="titleText">授权回调已接收</h1>
+    <p>真实平台已经完成跳转。生产环境下一步应由后端使用 code 调用平台接口换取 open_id，再进入统一第三方凭证登录。</p>
+    <pre id="payloadText">{}</pre>
+    <button type="button" id="closeBtn">关闭</button>
+  </main>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const state = params.get("state") || "";
+    const stateProvider = state.includes(":") ? state.split(":")[0].toUpperCase() : "";
+    const provider = (params.get("provider") || stateProvider || "").toUpperCase();
+    const payload = {
+      type: "third-party-oauth-code",
+      provider,
+      code: params.get("code") || "",
+      state,
+      error: params.get("error") || "",
+      error_description: params.get("error_description") || params.get("error_description".replace("_", "-")) || ""
+    };
+
+    document.getElementById("providerText").textContent = provider || "第三方平台";
+    document.getElementById("titleText").textContent = payload.error ? "授权返回异常" : "授权回调已接收";
+    document.getElementById("payloadText").textContent = JSON.stringify(payload, null, 2);
+
+    if (window.opener && !window.opener.closed) {
+      window.opener.postMessage(payload, window.location.origin);
+    }
+
+    document.getElementById("closeBtn").addEventListener("click", () => window.close());
+  </script>
+</body>
+</html>

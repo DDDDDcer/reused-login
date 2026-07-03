@@ -1,0 +1,10 @@
+server:
+  port: 18083
+
+spring:
+  application:
+    name: log-service-mock
+
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+    default-property-inclusion: non_null

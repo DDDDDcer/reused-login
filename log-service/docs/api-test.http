@@ -1,0 +1,63 @@
+@baseUrl = http://localhost:18083
+
+### 健康检测
+GET {{baseUrl}}/api/v1/log/health
+
+### 查询访问日志
+POST {{baseUrl}}/api/v1/log/search
+Content-Type: application/json
+
+{
+  "service_name": "topbiz-payment",
+  "page": 1,
+  "page_size": 10
+}
+
+### 上报访问日志
+POST {{baseUrl}}/internal/logs/access
+Content-Type: application/json
+
+{
+  "user_id": "u999",
+  "client_ip": "10.0.0.99",
+  "service_name": "topbiz-payment",
+  "path": "/api/payments",
+  "method": "POST",
+  "status_code": 500,
+  "cost_ms": 900,
+  "trace_id": "trace-new-001",
+  "message": "mock payment error"
+}
+
+### 创建告警规则
+POST {{baseUrl}}/api/v1/log/alerts/rules
+Content-Type: application/json
+
+{
+  "rule_name": "请求数达到阈值",
+  "metric_name": "request_count",
+  "operator": ">=",
+  "threshold": 3,
+  "duration": "5m",
+  "enabled": true,
+  "notify_type": "console"
+}
+
+### 查询告警历史
+GET {{baseUrl}}/api/v1/log/alerts/history?page=1&page_size=20
+
+### 聚合统计查询
+POST {{baseUrl}}/api/v1/log/metrics/query
+Content-Type: application/json
+
+{
+  "metric_name": "error_rate",
+  "group_by": "service_name",
+  "filters": {}
+}
+
+### 查看 debug 数据
+GET {{baseUrl}}/debug/logs
+
+### 重置数据
+POST {{baseUrl}}/debug/reset
